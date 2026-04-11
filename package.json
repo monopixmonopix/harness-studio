@@ -1,7 +1,6 @@
 {
   "name": "claude-studio",
   "version": "0.1.0",
-  "private": true,
   "description": "Visual orchestration platform for Claude Code — manage agents, workflows, skills & rules in ~/.claude/",
   "keywords": [
     "claude-code",
@@ -14,8 +13,26 @@
     "developer-tools",
     "claude-code-studio"
   ],
-  "homepage": "",
-  "repository": "",
+  "homepage": "https://github.com/androidZzT/claude-studio",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/androidZzT/claude-studio.git"
+  },
+  "license": "MIT",
+  "bin": {
+    "claude-studio": "./bin/cli.mjs"
+  },
+  "files": [
+    "bin/",
+    ".next/",
+    "public/",
+    "src/",
+    "docs/",
+    "package.json",
+    "next.config.*",
+    "tsconfig.json",
+    "postcss.config.*"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -42,6 +59,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "puppeteer-core": "^24.40.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
