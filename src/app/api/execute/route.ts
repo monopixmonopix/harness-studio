@@ -1,0 +1,88 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { startExecution } from '@/lib/execution-engine';
+import type { ApiResponse } from '@/types/resources';
+import yaml from 'js-yaml';
+
+interface ExecuteRequestBody {
+  readonly workflowYaml?: string;
+  readonly workflow?: {
+    readonly name: string;
+    readonly nodes: readonly {
+      readonly id: string;
+      readonly agent: string;
+      readonly task: string;
+      readonly checkpoint?: boolean;
+      readonly depends_on?: readonly string[];
+      readonly roundtrip?: readonly string[];
+    }[];
+  };
+  readonly projectPath?: string;
+  readonly simulate?: boolean;
+}
+
+interface WorkflowParsed {
+  readonly name: string;
+  readonly nodes: readonly {
+    readonly id: string;
+    readonly agent: string;
+    readonly task: string;
+    readonly checkpoint?: boolean;
+    readonly depends_on?: readonly string[];
+    readonly roundtrip?: readonly string[];
+  }[];
+}
+
+export async function POST(
+  request: NextRequest
+): Promise<NextResponse<ApiResponse<{ executionId: string }>>> {
+  try {
+    const body = (await request.json()) as ExecuteRequestBody;
+
+    let workflow: WorkflowParsed | null = null;
+
+    if (body.workflow) {
+      workflow = body.workflow;
+    } else if (body.workflowYaml) {
+      const parsed = yaml.load(body.workflowYaml) as WorkflowParsed | null;
+      if (!parsed || !parsed.name || !parsed.nodes) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid workflow YAML: missing name or nodes' },
+          { status: 400 }
+        );
+      }
+      workflow = parsed;
+    }
+
+    if (!workflow) {
+      return NextResponse.json(
+        { success: false, error: 'Either workflow or workflowYaml is required' },
+        { status: 400 }
+      );
+    }
+
+    if (workflow.nodes.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Workflow must have at least one node' },
+        { status: 400 }
+      );
+    }
+
+    const runner = startExecution(workflow, {
+      simulate: body.simulate ?? true,
+      projectPath: body.projectPath,
+    });
+
+    const state = runner.getState();
+
+    return NextResponse.json({
+      success: true,
+      data: { executionId: state.id },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to start execution';
+    return NextResponse.json(
+      { success: false, error: message },
+      { status: 500 }
+    );
+  }
+}
