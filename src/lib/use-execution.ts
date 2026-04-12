@@ -7,7 +7,7 @@ export type { ExecutionState, NodeExecutionStatus };
 interface UseExecutionResult {
   readonly executing: boolean;
   readonly executionState: ExecutionState | null;
-  readonly startExecution: (workflow: Workflow, projectPath?: string) => Promise<void>;
+  readonly startExecution: (workflow: Workflow, projectPath?: string, simulate?: boolean) => Promise<void>;
   readonly approveCheckpoint: (nodeId: string) => Promise<void>;
   readonly cancelExecution: () => Promise<void>;
   readonly getNodeExecutionStatus: (nodeId: string) => NodeExecutionStatus | null;
@@ -90,6 +90,21 @@ export function useExecution(): UseExecutionResult {
           });
         }
 
+        // Streaming output from live execution — append to node output
+        if (execEvent.type === 'node-output' && execEvent.nodeId && execEvent.output) {
+          setExecutionState((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              nodes: prev.nodes.map((n) =>
+                n.nodeId === execEvent.nodeId
+                  ? { ...n, output: (n.output ?? '') + execEvent.output }
+                  : n
+              ),
+            };
+          });
+        }
+
         if (execEvent.type === 'level-start' && execEvent.level !== undefined) {
           setExecutionState((prev) => {
             if (!prev) return prev;
@@ -139,7 +154,7 @@ export function useExecution(): UseExecutionResult {
     };
   }, [closeStream]);
 
-  const startExecution = useCallback(async (workflow: Workflow, projectPath?: string) => {
+  const startExecution = useCallback(async (workflow: Workflow, projectPath?: string, simulate = true) => {
     setLogs([]);
     setExecuting(true);
     setExecutionState(null);
@@ -158,10 +173,11 @@ export function useExecution(): UseExecutionResult {
               checkpoint: n.checkpoint,
               depends_on: n.depends_on,
               roundtrip: n.roundtrip,
+              skills: n.skills,
             })),
           },
           projectPath,
-          simulate: true,
+          simulate,
         }),
       });
 

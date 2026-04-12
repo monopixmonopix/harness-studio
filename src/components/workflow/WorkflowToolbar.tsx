@@ -28,6 +28,8 @@ interface WorkflowToolbarProps {
   readonly saving: boolean;
   readonly preview: PreviewState;
   readonly executing: boolean;
+  readonly simulate: boolean;
+  readonly onSimulateChange: (simulate: boolean) => void;
   readonly onSave: () => void;
   readonly onImport: (nodes: Node<DagNodeData>[], edges: Edge[]) => void;
   readonly onAutoLayout: () => void;
@@ -61,6 +63,8 @@ export function WorkflowToolbar({
   saving,
   preview,
   executing,
+  simulate,
+  onSimulateChange,
   onSave,
   onImport,
   onAutoLayout,
@@ -201,6 +205,20 @@ export function WorkflowToolbar({
         <span className="flex items-center gap-1"><LayoutGrid size={12} /> Layout</span>
       </button>
 
+      {/* Simulate / Live toggle */}
+      <button
+        onClick={() => onSimulateChange(!simulate)}
+        disabled={executing || preview.previewing}
+        className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors border ${
+          simulate
+            ? 'border-border bg-surface text-muted hover:bg-surface-hover'
+            : 'border-amber-500/50 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
+        } ${executing || preview.previewing ? 'opacity-50 cursor-not-allowed' : ''}`}
+        title={simulate ? 'Simulate mode: fake delays, no real execution' : 'Live mode: executes claude -p for each node'}
+      >
+        {simulate ? 'Simulate' : 'Live'}
+      </button>
+
       {/* Run */}
       <button
         onClick={executing ? onCancelRun : onRun}
@@ -209,12 +227,14 @@ export function WorkflowToolbar({
           executing
             ? 'bg-red-500/80 text-white hover:bg-red-500'
             : nodes.length > 0 && !preview.previewing
-              ? 'bg-emerald-600 text-white hover:bg-emerald-500'
+              ? simulate
+                ? 'bg-emerald-600 text-white hover:bg-emerald-500'
+                : 'bg-amber-600 text-white hover:bg-amber-500'
               : 'bg-surface text-muted cursor-not-allowed'
         }`}
       >
         <span className="flex items-center gap-1">
-          {executing ? <><Square size={12} /> Stop</> : <><Rocket size={12} /> Run</>}
+          {executing ? <><Square size={12} /> Stop</> : <><Rocket size={12} /> {simulate ? 'Run' : 'Run Live'}</>}
         </span>
       </button>
 

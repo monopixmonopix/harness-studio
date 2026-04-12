@@ -4,11 +4,18 @@
  * Computes topological execution order from DAG, executes nodes level by level,
  * same-level nodes run in parallel. Checkpoint nodes pause for user approval.
  *
- * MVP mode: simulate=true (default) runs fake 2-3s delays instead of real `claude -p`.
+ * Two modes:
+ * - simulate=true (default): fake 2-3s delays, safe for testing
+ * - simulate=false: real execution via `claude -p` per node
  */
 
 import { EventEmitter } from 'events';
+import { spawn, type ChildProcess } from 'child_process';
 import { computeLevelsFromDepsMap } from './topology';
+
+// ─── Constants ────────────────────────────────────────────────────────────
+
+const NODE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes per node
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -44,10 +51,11 @@ export interface ExecutionState {
   readonly nodes: readonly NodeStatus[];
   readonly currentLevel: number;
   readonly totalLevels: number;
+  readonly simulate: boolean;
 }
 
 export interface ExecutionEvent {
-  readonly type: 'node-status' | 'level-start' | 'execution-status' | 'log';
+  readonly type: 'node-status' | 'level-start' | 'execution-status' | 'log' | 'node-output';
   readonly executionId: string;
   readonly timestamp: string;
   readonly nodeId?: string;
@@ -55,6 +63,7 @@ export interface ExecutionEvent {
   readonly level?: number;
   readonly overallStatus?: ExecutionOverallStatus;
   readonly message?: string;
+  readonly output?: string;
 }
 
 interface WorkflowNodeInput {
@@ -64,6 +73,7 @@ interface WorkflowNodeInput {
   readonly checkpoint?: boolean;
   readonly depends_on?: readonly string[];
   readonly roundtrip?: readonly string[];
+  readonly skills?: readonly string[];
 }
 
 interface WorkflowInput {
@@ -103,11 +113,13 @@ export class ExecutionRunner extends EventEmitter {
   private readonly levels: readonly (readonly string[])[];
   private readonly nodeMap: Map<string, WorkflowNodeInput>;
   private readonly simulate: boolean;
+  private readonly projectPath: string | undefined;
   private nodeStatuses: Map<string, NodeStatus>;
   private currentLevel: number;
   private overallStatus: ExecutionOverallStatus;
   private checkpointResolvers: Map<string, () => void>;
   private cancelRequested: boolean;
+  private activeProcesses: Map<string, ChildProcess>;
 
   constructor(
     executionId: string,
@@ -118,10 +130,12 @@ export class ExecutionRunner extends EventEmitter {
     this.executionId = executionId;
     this.workflow = workflow;
     this.simulate = options.simulate ?? true;
+    this.projectPath = options.projectPath;
     this.currentLevel = 0;
     this.overallStatus = 'running';
     this.checkpointResolvers = new Map();
     this.cancelRequested = false;
+    this.activeProcesses = new Map();
 
     this.nodeMap = new Map(workflow.nodes.map((n) => [n.id, n]));
     this.levels = computeLevelsFromWorkflow(workflow.nodes);
@@ -143,6 +157,7 @@ export class ExecutionRunner extends EventEmitter {
       nodes: Array.from(this.nodeStatuses.values()),
       currentLevel: this.currentLevel,
       totalLevels: this.levels.length,
+      simulate: this.simulate,
     };
   }
 
@@ -211,6 +226,12 @@ export class ExecutionRunner extends EventEmitter {
 
   cancel(): void {
     this.cancelRequested = true;
+
+    // Kill any active child processes
+    for (const [nodeId, proc] of this.activeProcesses) {
+      proc.kill('SIGTERM');
+      this.activeProcesses.delete(nodeId);
+    }
 
     // Resolve any pending checkpoints to unblock
     for (const [nodeId, resolver] of this.checkpointResolvers) {
@@ -305,8 +326,7 @@ export class ExecutionRunner extends EventEmitter {
     if (this.simulate) {
       return this.simulateNodeTask(node);
     }
-    // Future: real execution with child_process.spawn('claude', ['-p', node.task])
-    return this.simulateNodeTask(node);
+    return this.liveExecuteNode(node);
   }
 
   private async simulateNodeTask(node: WorkflowNodeInput): Promise<string> {
@@ -315,6 +335,78 @@ export class ExecutionRunner extends EventEmitter {
       setTimeout(resolve, delayMs);
     });
     return `[Simulated] Agent "${node.agent}" completed task: ${node.task}`;
+  }
+
+  /**
+   * Execute a node via `claude -p` with the node's task as the prompt.
+   * Streams stdout chunks as 'node-output' events for live UI updates.
+   */
+  private liveExecuteNode(node: WorkflowNodeInput): Promise<string> {
+    return new Promise((resolve, reject) => {
+      // Build the prompt: prepend skill hints if present
+      const skillHints = (node.skills ?? []).length > 0
+        ? `Use skills: ${node.skills!.join(', ')}.\n\n`
+        : '';
+      const prompt = `${skillHints}${node.task}`;
+
+      const cwd = this.projectPath ?? process.cwd();
+
+      this.emitEvent({
+        type: 'log',
+        nodeId: node.id,
+        message: `[Live] Spawning: claude -p "${prompt.slice(0, 80)}${prompt.length > 80 ? '...' : ''}" (cwd: ${cwd})`,
+      });
+
+      const proc = spawn('claude', ['-p', prompt], {
+        cwd,
+        env: { ...process.env },
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: NODE_TIMEOUT_MS,
+      });
+
+      this.activeProcesses.set(node.id, proc);
+
+      let stdout = '';
+      let stderr = '';
+
+      proc.stdout.on('data', (chunk: Buffer) => {
+        const text = chunk.toString();
+        stdout += text;
+
+        // Stream partial output to UI
+        this.emitEvent({
+          type: 'node-output',
+          nodeId: node.id,
+          output: text,
+          message: `[${node.id}] ${text.slice(0, 200)}`,
+        });
+      });
+
+      proc.stderr.on('data', (chunk: Buffer) => {
+        stderr += chunk.toString();
+      });
+
+      proc.on('close', (code) => {
+        this.activeProcesses.delete(node.id);
+
+        if (this.cancelRequested) {
+          reject(new Error('Cancelled'));
+          return;
+        }
+
+        if (code === 0) {
+          resolve(stdout.trim());
+        } else {
+          const errorMsg = stderr.trim() || `claude exited with code ${code}`;
+          reject(new Error(errorMsg));
+        }
+      });
+
+      proc.on('error', (err) => {
+        this.activeProcesses.delete(node.id);
+        reject(new Error(`Failed to spawn claude: ${err.message}`));
+      });
+    });
   }
 
   private updateNodeStatus(

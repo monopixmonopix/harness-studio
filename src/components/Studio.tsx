@@ -32,6 +32,7 @@ export function Studio() {
   const { settings } = useSettings();
   const studioSettings = useStudioSettings();
   const execution = useExecution();
+  const [simulate, setSimulate] = useState(true);
 
   const wfs = useWorkflowState(pm.activeProject, pm.activeProjectId);
 
@@ -210,8 +211,8 @@ export function Studio() {
       wfs.canvasEdges as Edge[],
     );
     const projectPath = pm.activeProject?.path;
-    execution.startExecution(wf, projectPath);
-  }, [wfs.canvasNodes, wfs.canvasEdges, wfs.activeWorkflow, pm.activeProject, execution]);
+    execution.startExecution(wf, projectPath, simulate);
+  }, [wfs.canvasNodes, wfs.canvasEdges, wfs.activeWorkflow, pm.activeProject, execution, simulate]);
 
   const handleCancelRun = useCallback(() => {
     execution.cancelExecution();
@@ -285,6 +286,8 @@ export function Studio() {
               getNodeExecutionStatus={execution.getNodeExecutionStatus}
               onRun={handleRun}
               onCancelRun={handleCancelRun}
+              simulate={simulate}
+              onSimulateChange={setSimulate}
               showCanvasGrid={studioSettings.settings.showCanvasGrid}
               showMinimap={studioSettings.settings.showMinimap}
               animationSpeed={studioSettings.settings.animationSpeed}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useMemo } from 'react';
-import { XCircle, CheckCircle2, Clock, AlertCircle, Loader2, Ban } from 'lucide-react';
+import { XCircle, CheckCircle2, Clock, AlertCircle, Loader2, Ban, AlertTriangle } from 'lucide-react';
 import type { ExecutionState, NodeExecutionStatus } from '@/lib/use-execution';
 
 interface ExecutionPanelProps {
@@ -79,10 +79,10 @@ function NodeStatusRow({
           <span className="text-[10px] text-muted">{statusLabel(status)}</span>
         </div>
         {output && (
-          <p className="mt-0.5 line-clamp-2 text-[10px] text-muted/70">{output}</p>
+          <pre className="mt-0.5 max-h-24 overflow-y-auto whitespace-pre-wrap break-all rounded bg-background/50 p-1 text-[10px] text-muted/70 leading-relaxed">{output}</pre>
         )}
         {error && (
-          <p className="mt-0.5 line-clamp-2 text-[10px] text-red-400/70">{error}</p>
+          <pre className="mt-0.5 max-h-16 overflow-y-auto whitespace-pre-wrap break-all rounded bg-red-500/5 p-1 text-[10px] text-red-400/70 leading-relaxed">{error}</pre>
         )}
         {status === 'waiting-checkpoint' && (
           <button
@@ -129,9 +129,24 @@ export function ExecutionPanel({
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">
             Execution
           </h2>
-          {overallStatusBadge(executionState.status)}
+          <div className="flex items-center gap-1.5">
+            {!executionState.simulate && (
+              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
+                LIVE
+              </span>
+            )}
+            {overallStatusBadge(executionState.status)}
+          </div>
         </div>
         <p className="mt-1 text-sm font-medium">{executionState.workflowName}</p>
+        {!executionState.simulate && (
+          <div className="mt-1.5 flex items-start gap-1.5 rounded border border-amber-500/30 bg-amber-500/5 px-2 py-1">
+            <AlertTriangle size={12} className="mt-0.5 shrink-0 text-amber-400" />
+            <p className="text-[10px] leading-tight text-amber-400/80">
+              Live mode: executing <code className="font-mono">claude -p</code> for each node. 5 min timeout per node.
+            </p>
+          </div>
+        )}
 
         {/* Progress bar */}
         <div className="mt-2">

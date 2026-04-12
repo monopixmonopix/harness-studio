@@ -3,18 +3,21 @@ import { startExecution } from '@/lib/execution-engine';
 import type { ApiResponse } from '@/types/resources';
 import yaml from 'js-yaml';
 
+interface WorkflowNodeParsed {
+  readonly id: string;
+  readonly agent: string;
+  readonly task: string;
+  readonly checkpoint?: boolean;
+  readonly depends_on?: readonly string[];
+  readonly roundtrip?: readonly string[];
+  readonly skills?: readonly string[];
+}
+
 interface ExecuteRequestBody {
   readonly workflowYaml?: string;
   readonly workflow?: {
     readonly name: string;
-    readonly nodes: readonly {
-      readonly id: string;
-      readonly agent: string;
-      readonly task: string;
-      readonly checkpoint?: boolean;
-      readonly depends_on?: readonly string[];
-      readonly roundtrip?: readonly string[];
-    }[];
+    readonly nodes: readonly WorkflowNodeParsed[];
   };
   readonly projectPath?: string;
   readonly simulate?: boolean;
@@ -22,14 +25,7 @@ interface ExecuteRequestBody {
 
 interface WorkflowParsed {
   readonly name: string;
-  readonly nodes: readonly {
-    readonly id: string;
-    readonly agent: string;
-    readonly task: string;
-    readonly checkpoint?: boolean;
-    readonly depends_on?: readonly string[];
-    readonly roundtrip?: readonly string[];
-  }[];
+  readonly nodes: readonly WorkflowNodeParsed[];
 }
 
 export async function POST(

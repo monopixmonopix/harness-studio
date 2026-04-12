@@ -86,6 +86,8 @@ interface WorkflowCanvasProps {
   readonly getNodeExecutionStatus?: (nodeId: string) => ExecutionNodeStatus | null;
   readonly onRun?: () => void;
   readonly onCancelRun?: () => void;
+  readonly simulate?: boolean;
+  readonly onSimulateChange?: (simulate: boolean) => void;
   readonly showCanvasGrid?: boolean;
   readonly showMinimap?: boolean;
   readonly animationSpeed?: 'fast' | 'normal' | 'slow';
@@ -109,6 +111,8 @@ function WorkflowCanvasInner({
   getNodeExecutionStatus,
   onRun,
   onCancelRun,
+  simulate = true,
+  onSimulateChange,
   showCanvasGrid = true,
   showMinimap = true,
   animationSpeed = 'normal',
@@ -593,6 +597,8 @@ function WorkflowCanvasInner({
         saving={saving}
         preview={preview}
         executing={executing}
+        simulate={simulate}
+        onSimulateChange={onSimulateChange ?? (() => {})}
         onSave={handleSave}
         onImport={handleImport}
         onAutoLayout={handleAutoLayout}
