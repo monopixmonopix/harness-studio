@@ -20,6 +20,12 @@ Design, manage, and execute multi-agent workflows through an intuitive DAG edito
 - 🧠 **Memory Inspector** — Read-only view of project memories with delete capability
 - 🎯 **CLAUDE.md Sync** — Workflows auto-sync to CLAUDE.md for Claude Code integration
 - 🌐 **Community Links** — Live GitHub stars for awesome-claude-code, agent templates, skills collections
+- 🗂️ **System Directory Picker** — Native OS directory picker for opening projects
+- 🌓 **Theme Switching** — Dark, Light, and System theme modes
+- ↔️ **Resizable Panels** — Drag to resize the right panel
+- ⚙️ **Project-level Config** — Manage shared and local Claude configuration per project
+- 📐 **Project-first Layout** — Restructured left panel with project navigation priority
+- 📥 **Import/Export** — Improved import with FileInput/FileOutput icons in sidebar
 
 ## Quick Start
 
@@ -48,7 +54,7 @@ npm run dev -- -p 3100
 2. **Create agents** — from templates or AI generation
 3. **Build workflow** — drag agents onto canvas, connect with edges
 4. **Bind skills & MCPs** — drag from panel onto agent nodes
-5. **Preview & Run** — preview animation, then execute with checkpoint gates
+5. **Run** — execute with checkpoint gates
 6. **Export** — save as YAML or export as Claude Code plugin
 
 ## Architecture
