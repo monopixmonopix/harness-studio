@@ -30,13 +30,13 @@ Design, manage, and execute multi-agent workflows through an intuitive DAG edito
 ## Quick Start
 
 ```bash
-npx claude-studio
+npx claude-code-studio
 ```
 
 Or with custom port:
 
 ```bash
-npx claude-studio --port 3200
+npx claude-code-studio --port 3200
 ```
 
 ### Development

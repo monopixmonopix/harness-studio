@@ -24,13 +24,13 @@ Claude Code Agent Teams 的可视化编排平台。
 ## 快速开始
 
 ```bash
-npx claude-studio
+npx claude-code-studio
 ```
 
 自定义端口：
 
 ```bash
-npx claude-studio --port 3200
+npx claude-code-studio --port 3200
 ```
 
 ### 开发模式
