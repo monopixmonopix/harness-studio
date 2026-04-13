@@ -2,9 +2,11 @@
 
 import { useState, useCallback, useEffect } from 'react';
 
+export type ThemeOption = 'claude-dark' | 'claude-light' | 'system';
+
 export interface StudioSettings {
   readonly language: 'en' | 'zh';
-  readonly theme: 'claude-dark' | 'system';
+  readonly theme: ThemeOption;
   readonly editorFontSize: number;
   readonly showCanvasGrid: boolean;
   readonly showMinimap: boolean;
@@ -49,6 +51,19 @@ function persistSettings(settings: StudioSettings): void {
   }
 }
 
+function resolveTheme(theme: ThemeOption): 'claude-dark' | 'claude-light' {
+  if (theme !== 'system') return theme;
+  if (typeof window === 'undefined') return 'claude-dark';
+  return window.matchMedia('(prefers-color-scheme: light)').matches
+    ? 'claude-light'
+    : 'claude-dark';
+}
+
+function applyTheme(theme: ThemeOption): void {
+  if (typeof document === 'undefined') return;
+  document.documentElement.setAttribute('data-theme', resolveTheme(theme));
+}
+
 interface UseStudioSettingsResult {
   readonly settings: StudioSettings;
   readonly updateSetting: <K extends keyof StudioSettings>(key: K, value: StudioSettings[K]) => void;
@@ -59,13 +74,27 @@ export function useStudioSettings(): UseStudioSettingsResult {
   const [settings, setSettings] = useState<StudioSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
-    setSettings(loadSettings());
+    const loaded = loadSettings();
+    setSettings(loaded);
+    applyTheme(loaded.theme);
   }, []);
+
+  // Listen for system theme changes when in 'system' mode
+  useEffect(() => {
+    if (settings.theme !== 'system') return;
+    const mq = window.matchMedia('(prefers-color-scheme: light)');
+    const handler = () => applyTheme('system');
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [settings.theme]);
 
   const updateSetting = useCallback(<K extends keyof StudioSettings>(key: K, value: StudioSettings[K]) => {
     setSettings((prev) => {
       const next = { ...prev, [key]: value };
       persistSettings(next);
+      if (key === 'theme') {
+        applyTheme(value as ThemeOption);
+      }
       return next;
     });
   }, []);
@@ -73,6 +102,7 @@ export function useStudioSettings(): UseStudioSettingsResult {
   const resetSettings = useCallback(() => {
     persistSettings(DEFAULT_SETTINGS);
     setSettings(DEFAULT_SETTINGS);
+    applyTheme(DEFAULT_SETTINGS.theme);
   }, []);
 
   return { settings, updateSetting, resetSettings };

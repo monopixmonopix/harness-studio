@@ -96,17 +96,6 @@ interface TabProps {
 function AppearanceTab({ settings, onUpdate }: TabProps) {
   return (
     <div className="flex flex-col gap-4">
-      <SettingRow label="Language">
-        <select
-          value={settings.language}
-          onChange={(e) => onUpdate('language', e.target.value as StudioSettings['language'])}
-          className="rounded border border-border bg-background px-2 py-1 text-xs text-foreground"
-        >
-          <option value="en">English</option>
-          <option value="zh">中文</option>
-        </select>
-      </SettingRow>
-
       <SettingRow label="Theme">
         <select
           value={settings.theme}
@@ -114,6 +103,7 @@ function AppearanceTab({ settings, onUpdate }: TabProps) {
           className="rounded border border-border bg-background px-2 py-1 text-xs text-foreground"
         >
           <option value="claude-dark">Claude Dark</option>
+          <option value="claude-light">Claude Light</option>
           <option value="system">System</option>
         </select>
       </SettingRow>

@@ -29,7 +29,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full dark`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full`}
+      data-theme="claude-dark"
     >
       <body className="h-full overflow-hidden">{children}</body>
     </html>
