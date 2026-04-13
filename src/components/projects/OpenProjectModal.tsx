@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { X, FolderOpen } from 'lucide-react';
-import { useBrowseDirectories } from '@/lib/use-projects';
+import { useBrowseDirectories, usePickDirectory } from '@/lib/use-projects';
 
 interface OpenProjectModalProps {
   readonly open: boolean;
@@ -35,6 +35,7 @@ function OpenProjectModalInner({ onClose, onOpen, loading, error }: OpenProjectM
   const [pathInput, setPathInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const { entries, browse, clear } = useBrowseDirectories();
+  const { pickDirectory, loading: picking } = usePickDirectory();
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -54,6 +55,15 @@ function OpenProjectModalInner({ onClose, onOpen, loading, error }: OpenProjectM
     },
     [browse, clear]
   );
+
+  const handleBrowse = useCallback(async () => {
+    const selected = await pickDirectory();
+    if (selected) {
+      setPathInput(selected);
+      clear();
+      setShowSuggestions(false);
+    }
+  }, [pickDirectory, clear]);
 
   const handleSelectSuggestion = useCallback((entry: string) => {
     setPathInput(entry);
@@ -108,7 +118,7 @@ function OpenProjectModalInner({ onClose, onOpen, loading, error }: OpenProjectM
         {/* Content */}
         <div className="p-5">
           <label className="mb-1 block text-xs text-muted">Project Path</label>
-          <div className="relative">
+          <div className="relative flex gap-2">
             <input
               ref={inputRef}
               type="text"
@@ -117,8 +127,16 @@ function OpenProjectModalInner({ onClose, onOpen, loading, error }: OpenProjectM
               onKeyDown={handleKeyDown}
               onFocus={() => entries.length > 0 && setShowSuggestions(true)}
               placeholder="~/Claude/my-project"
-              className="w-full rounded border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
+              className="flex-1 rounded border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
             />
+            <button
+              onClick={handleBrowse}
+              disabled={picking}
+              title="Browse directories"
+              className="shrink-0 rounded border border-border bg-background px-3 py-2 text-muted hover:bg-surface-hover hover:text-foreground transition-colors disabled:opacity-50"
+            >
+              <FolderOpen size={14} />
+            </button>
             {showSuggestions && entries.length > 0 && (
               <SuggestionList
                 entries={entries}

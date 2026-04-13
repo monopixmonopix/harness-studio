@@ -151,6 +151,30 @@ export function useBrowseDirectories() {
   return { entries, loading, browse, clear } as const;
 }
 
+// --- Pick directory (native OS dialog) ---
+
+export function usePickDirectory() {
+  const [loading, setLoading] = useState(false);
+
+  const pickDirectory = useCallback(async (): Promise<string | null> => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/projects/pick-directory', { method: 'POST' });
+      const json = await res.json() as { success: boolean; data?: { path: string }; error?: string };
+      if (json.success && json.data) {
+        return json.data.path;
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { pickDirectory, loading } as const;
+}
+
 // --- Create project hook ---
 
 export interface CreateProjectParams {
