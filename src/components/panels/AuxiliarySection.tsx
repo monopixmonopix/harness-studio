@@ -109,17 +109,32 @@ interface AuxiliarySectionProps {
   readonly selectedId: string | null;
   readonly onSelect: (resource: Resource) => void;
   readonly mcpServerNames?: readonly string[];
+  readonly onOpenGlobalConfig?: () => void;
 }
 
-export function AuxiliarySection({ resources, selectedId, onSelect, mcpServerNames = [] }: AuxiliarySectionProps) {
+export function AuxiliarySection({ resources, selectedId, onSelect, mcpServerNames = [], onOpenGlobalConfig }: AuxiliarySectionProps) {
   const skills = resources.filter((r) => r.type === 'skills');
   const rules = resources.filter((r) => r.type === 'rules');
 
+  const hasContent = skills.length > 0 || rules.length > 0 || mcpServerNames.length > 0 || !!onOpenGlobalConfig;
+  if (!hasContent) return null;
+
   return (
-    <div className="border-t border-border/30 pt-1">
+    <div className="mt-2 border-t border-border/50 pt-2">
+      <p className="mb-1 px-1 text-[9px] font-semibold uppercase tracking-widest text-muted/60">
+        Global
+      </p>
       <ResourceSection label="Skills" type="skills" items={skills} selectedId={selectedId} onSelect={onSelect} />
       <McpSection names={[...mcpServerNames]} />
       <ResourceSection label="Rules" type="rules" items={rules} selectedId={selectedId} onSelect={onSelect} />
+      {onOpenGlobalConfig && (
+        <button
+          onClick={onOpenGlobalConfig}
+          className="mt-1 w-full rounded px-3 py-1 text-left text-xs text-foreground/70 hover:bg-surface-hover transition-colors"
+        >
+          Global Config
+        </button>
+      )}
     </div>
   );
 }
