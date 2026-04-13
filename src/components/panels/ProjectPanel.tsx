@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { GripVertical, Plus, Trash2 } from 'lucide-react';
+import { useState, useCallback, useRef } from 'react';
+import { GripVertical, Plus, Trash2, FileInput } from 'lucide-react';
 import type { Project, Resource, Workflow } from '@/types/resources';
+import { validateWorkflow } from '@/lib/workflow-validation';
 import type { RecentProject } from '@/lib/use-projects';
 import { ProjectSelector } from './ProjectSelector';
 import { AuxiliarySection } from './AuxiliarySection';
@@ -26,10 +27,13 @@ interface ProjectPanelProps {
   readonly onSelectClaudeMd: (project: Project) => void;
   readonly onCreateWorkflow: (project: Project, template?: Workflow) => void;
   readonly onCreateAgent?: () => void;
+  readonly onImportAgent?: (name: string, content: string) => void;
   readonly onDeleteAgent?: (agent: Resource) => void;
   readonly onCreateSkill?: () => void;
+  readonly onImportSkill?: (name: string, content: string) => void;
   readonly onDeleteSkill?: (skill: Resource) => void;
   readonly onOpenClaudeConfig?: () => void;
+  readonly onOpenGlobalConfig?: () => void;
 }
 
 export function ProjectPanel({
@@ -48,10 +52,13 @@ export function ProjectPanel({
   onSelectClaudeMd,
   onCreateWorkflow,
   onCreateAgent,
+  onImportAgent,
   onDeleteAgent,
   onCreateSkill,
+  onImportSkill,
   onDeleteSkill,
   onOpenClaudeConfig,
+  onOpenGlobalConfig,
 }: ProjectPanelProps) {
   return (
     <nav className="flex h-full flex-col">
@@ -83,6 +90,20 @@ export function ProjectPanel({
           </div>
         )}
 
+        {/* Claude Config */}
+        {!activeProjectLoading && activeProject && onOpenClaudeConfig && (
+          <ClaudeConfigSection onOpen={onOpenClaudeConfig} />
+        )}
+
+        {/* CLAUDE.md */}
+        {!activeProjectLoading && activeProject && activeProject.claudeMd !== undefined && (
+          <ClaudeMdSection
+            project={activeProject}
+            selectedId={selectedId}
+            onSelectClaudeMd={onSelectClaudeMd}
+          />
+        )}
+
         {!activeProjectLoading && activeProject && (
           <ActiveProjectContent
             project={activeProject}
@@ -90,8 +111,10 @@ export function ProjectPanel({
             onSelectResource={onSelectResource}
             onCreateWorkflow={onCreateWorkflow}
             onCreateAgent={onCreateAgent}
+            onImportAgent={onImportAgent}
             onDeleteAgent={onDeleteAgent}
             onCreateSkill={onCreateSkill}
+            onImportSkill={onImportSkill}
             onDeleteSkill={onDeleteSkill}
           />
         )}
@@ -102,21 +125,8 @@ export function ProjectPanel({
           selectedId={selectedId}
           onSelect={onSelectResource}
           mcpServerNames={mcpServerNames}
+          onOpenGlobalConfig={onOpenGlobalConfig}
         />
-
-        {/* Claude Config */}
-        {onOpenClaudeConfig && (
-          <ClaudeConfigSection onOpen={onOpenClaudeConfig} />
-        )}
-
-        {/* CLAUDE.md at the bottom */}
-        {!activeProjectLoading && activeProject && activeProject.claudeMd !== undefined && (
-          <ClaudeMdSection
-            project={activeProject}
-            selectedId={selectedId}
-            onSelectClaudeMd={onSelectClaudeMd}
-          />
-        )}
 
         {/* Community links */}
         <CommunityLinks />
@@ -131,8 +141,10 @@ interface ActiveProjectContentProps {
   readonly onSelectResource: (resource: Resource) => void;
   readonly onCreateWorkflow: (project: Project, template?: Workflow) => void;
   readonly onCreateAgent?: () => void;
+  readonly onImportAgent?: (name: string, content: string) => void;
   readonly onDeleteAgent?: (agent: Resource) => void;
   readonly onCreateSkill?: () => void;
+  readonly onImportSkill?: (name: string, content: string) => void;
   readonly onDeleteSkill?: (skill: Resource) => void;
 }
 
@@ -142,8 +154,10 @@ function ActiveProjectContent({
   onSelectResource,
   onCreateWorkflow,
   onCreateAgent,
+  onImportAgent,
   onDeleteAgent,
   onCreateSkill,
+  onImportSkill,
   onDeleteSkill,
 }: ActiveProjectContentProps) {
   return (
@@ -154,6 +168,7 @@ function ActiveProjectContent({
         selectedId={selectedId}
         onSelectResource={onSelectResource}
         onCreateAgent={onCreateAgent}
+        onImportAgent={onImportAgent}
         onDeleteAgent={onDeleteAgent}
       />
 
@@ -163,6 +178,7 @@ function ActiveProjectContent({
         selectedId={selectedId}
         onSelectResource={onSelectResource}
         onCreateSkill={onCreateSkill}
+        onImportSkill={onImportSkill}
         onDeleteSkill={onDeleteSkill}
       />
 
@@ -208,11 +224,13 @@ interface AgentsSectionProps {
   readonly selectedId: string | null;
   readonly onSelectResource: (resource: Resource) => void;
   readonly onCreateAgent?: () => void;
+  readonly onImportAgent?: (name: string, content: string) => void;
   readonly onDeleteAgent?: (agent: Resource) => void;
 }
 
-function AgentsSection({ agents, selectedId, onSelectResource, onCreateAgent, onDeleteAgent }: AgentsSectionProps) {
+function AgentsSection({ agents, selectedId, onSelectResource, onCreateAgent, onImportAgent, onDeleteAgent }: AgentsSectionProps) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragStart = useCallback(
     (event: React.DragEvent<HTMLButtonElement>, item: Resource) => {
@@ -302,13 +320,45 @@ function AgentsSection({ agents, selectedId, onSelectResource, onCreateAgent, on
       ) : (
         <p className="px-3 py-1 text-[10px] text-muted/60">No agents</p>
       )}
-      {onCreateAgent && (
-        <button
-          onClick={onCreateAgent}
-          className="w-full rounded px-3 py-0.5 text-left text-xs text-accent/70 hover:bg-surface-hover hover:text-accent transition-colors mt-0.5"
-        >
-          <span className="flex items-center gap-1"><Plus size={12} /> New Agent</span>
-        </button>
+      {(onCreateAgent || onImportAgent) && (
+        <div className="mt-0.5 flex items-center">
+          {onCreateAgent && (
+            <button
+              onClick={onCreateAgent}
+              className="flex-1 rounded px-3 py-0.5 text-left text-xs text-accent/70 hover:bg-surface-hover hover:text-accent transition-colors"
+            >
+              <span className="flex items-center gap-1"><Plus size={12} /> New</span>
+            </button>
+          )}
+          {onImportAgent && (
+            <>
+              <button
+                onClick={() => importInputRef.current?.click()}
+                className="flex-1 rounded px-3 py-0.5 text-left text-xs text-accent/70 hover:bg-surface-hover hover:text-accent transition-colors"
+                title="Import agent from Markdown file"
+              >
+                <span className="flex items-center gap-1"><FileInput size={12} /> Import</span>
+              </button>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".md"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return;
+                  const name = file.name.replace(/\.md$/i, '');
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    onImportAgent(name, reader.result as string);
+                  };
+                  reader.readAsText(file);
+                  event.target.value = '';
+                }}
+                className="hidden"
+              />
+            </>
+          )}
+        </div>
       )}
     </CollapsibleSection>
   );
@@ -319,11 +369,13 @@ interface SkillsSectionProps {
   readonly selectedId: string | null;
   readonly onSelectResource: (resource: Resource) => void;
   readonly onCreateSkill?: () => void;
+  readonly onImportSkill?: (name: string, content: string) => void;
   readonly onDeleteSkill?: (skill: Resource) => void;
 }
 
-function SkillsSection({ skills, selectedId, onSelectResource, onCreateSkill, onDeleteSkill }: SkillsSectionProps) {
+function SkillsSection({ skills, selectedId, onSelectResource, onCreateSkill, onImportSkill, onDeleteSkill }: SkillsSectionProps) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragStart = useCallback(
     (event: React.DragEvent<HTMLButtonElement>, item: Resource) => {
@@ -413,13 +465,45 @@ function SkillsSection({ skills, selectedId, onSelectResource, onCreateSkill, on
       ) : (
         <p className="px-3 py-1 text-[10px] text-muted/60">No skills</p>
       )}
-      {onCreateSkill && (
-        <button
-          onClick={onCreateSkill}
-          className="w-full rounded px-3 py-0.5 text-left text-xs text-accent/70 hover:bg-surface-hover hover:text-accent transition-colors mt-0.5"
-        >
-          <span className="flex items-center gap-1"><Plus size={12} /> New Skill</span>
-        </button>
+      {(onCreateSkill || onImportSkill) && (
+        <div className="mt-0.5 flex items-center">
+          {onCreateSkill && (
+            <button
+              onClick={onCreateSkill}
+              className="flex-1 rounded px-3 py-0.5 text-left text-xs text-accent/70 hover:bg-surface-hover hover:text-accent transition-colors"
+            >
+              <span className="flex items-center gap-1"><Plus size={12} /> New</span>
+            </button>
+          )}
+          {onImportSkill && (
+            <>
+              <button
+                onClick={() => importInputRef.current?.click()}
+                className="flex-1 rounded px-3 py-0.5 text-left text-xs text-accent/70 hover:bg-surface-hover hover:text-accent transition-colors"
+                title="Import skill from Markdown file"
+              >
+                <span className="flex items-center gap-1"><FileInput size={12} /> Import</span>
+              </button>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".md"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return;
+                  const name = file.name.replace(/\.md$/i, '');
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    onImportSkill(name, reader.result as string);
+                  };
+                  reader.readAsText(file);
+                  event.target.value = '';
+                }}
+                className="hidden"
+              />
+            </>
+          )}
+        </div>
       )}
     </CollapsibleSection>
   );
@@ -441,6 +525,7 @@ function WorkflowsSection({
   onCreateWorkflow,
 }: WorkflowsSectionProps) {
   const [showTemplates, setShowTemplates] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const handleNewBlank = useCallback(() => {
     onCreateWorkflow(project);
@@ -451,6 +536,41 @@ function WorkflowsSection({
     onCreateWorkflow(project, template);
     setShowTemplates(false);
   }, [project, onCreateWorkflow]);
+
+  const handleImportClick = useCallback(() => {
+    importInputRef.current?.click();
+  }, []);
+
+  const handleImportFile = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const text = reader.result as string;
+        try {
+          const yaml = await import('js-yaml');
+          const parsed = yaml.load(text) as unknown;
+          const validation = validateWorkflow(parsed);
+          if (!validation.valid) {
+            window.alert(
+              `Invalid workflow:\n${validation.errors.join('\n')}`,
+            );
+            return;
+          }
+          onCreateWorkflow(project, parsed as Workflow);
+        } catch (err) {
+          const message =
+            err instanceof Error ? err.message : 'Unknown parse error';
+          window.alert(`Failed to parse YAML:\n${message}`);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    },
+    [project, onCreateWorkflow],
+  );
 
   return (
     <CollapsibleSection label="Workflows" count={workflows.length}>
@@ -475,15 +595,29 @@ function WorkflowsSection({
           ))}
         </ul>
       )}
-      <div className="relative mt-0.5">
+      <div className="relative mt-0.5 flex items-center">
         <button
           onClick={() => setShowTemplates((prev) => !prev)}
-          className="w-full rounded px-3 py-0.5 text-left text-xs text-accent/70 hover:bg-surface-hover hover:text-accent transition-colors"
+          className="flex-1 rounded px-3 py-0.5 text-left text-xs text-accent/70 hover:bg-surface-hover hover:text-accent transition-colors"
         >
-          <span className="flex items-center gap-1"><Plus size={12} /> New Workflow</span>
+          <span className="flex items-center gap-1"><Plus size={12} /> New</span>
         </button>
+        <button
+          onClick={handleImportClick}
+          className="flex-1 rounded px-3 py-0.5 text-left text-xs text-accent/70 hover:bg-surface-hover hover:text-accent transition-colors"
+          title="Import workflow from YAML file"
+        >
+          <span className="flex items-center gap-1"><FileInput size={12} /> Import</span>
+        </button>
+        <input
+          ref={importInputRef}
+          type="file"
+          accept=".yaml,.yml"
+          onChange={handleImportFile}
+          className="hidden"
+        />
         {showTemplates && (
-          <div className="absolute left-0 z-10 mt-0.5 w-full rounded border border-border bg-surface shadow-lg">
+          <div className="absolute left-0 top-full z-10 mt-0.5 w-full rounded border border-border bg-surface shadow-lg">
             <button
               onClick={handleNewBlank}
               className="w-full px-3 py-1.5 text-left text-xs text-foreground/70 hover:bg-surface-hover"
