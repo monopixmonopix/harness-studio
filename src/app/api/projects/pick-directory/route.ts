@@ -41,6 +41,8 @@ function openDirectoryPicker(): Promise<string | null> {
   if (platform === 'darwin') {
     return runCommand('osascript', [
       '-e',
+      'tell application "Finder" to activate',
+      '-e',
       'set chosenFolder to choose folder with prompt "Select Project Directory"',
       '-e',
       'return POSIX path of chosenFolder',
@@ -56,8 +58,12 @@ function openDirectoryPicker(): Promise<string | null> {
 
 function runCommand(cmd: string, args: readonly string[]): Promise<string | null> {
   return new Promise((resolve) => {
-    execFile(cmd, [...args], { timeout: 60000 }, (error, stdout) => {
+    execFile(cmd, [...args], { timeout: 60000 }, (error, stdout, stderr) => {
       if (error) {
+        console.error(`[pick-directory] ${cmd} failed:`, error.message);
+        if (stderr) {
+          console.error(`[pick-directory] stderr:`, stderr);
+        }
         resolve(null);
         return;
       }
