@@ -21,7 +21,28 @@ interface ResourceEditorProps {
   readonly fontSize?: number;
 }
 
+function useMonacoTheme(): string {
+  const [theme, setTheme] = useState('vs-dark');
+
+  useEffect(() => {
+    const resolve = () => {
+      const dt = document.documentElement.getAttribute('data-theme');
+      setTheme(dt === 'claude-light' ? 'light' : 'vs-dark');
+    };
+    resolve();
+    const observer = new MutationObserver(resolve);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return theme;
+}
+
 export function ResourceEditor({ resource, onSave, fontSize = 12 }: ResourceEditorProps) {
+  const monacoTheme = useMonacoTheme();
   const [value, setValue] = useState(resource.content);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -146,7 +167,7 @@ export function ResourceEditor({ resource, onSave, fontSize = 12 }: ResourceEdit
         <MonacoEditor
           height="100%"
           language={language}
-          theme="vs-dark"
+          theme={monacoTheme}
           value={value}
           onChange={handleChange}
           options={{
