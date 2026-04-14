@@ -36,7 +36,8 @@ export async function POST(): Promise<NextResponse<ApiResponse<PickResult>>> {
 }
 
 function openDirectoryPicker(): Promise<string | null> {
-  const platform = process.platform;
+  // Use String() to prevent Turbopack dead code elimination of platform branches
+  const platform = String(process.platform);
 
   if (platform === 'darwin') {
     return runCommand('osascript', [
