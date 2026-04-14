@@ -51,12 +51,26 @@ export async function PUT(
   }
 
   try {
-    const body = await request.json() as { content: string; frontmatter?: Record<string, unknown> };
+    const body = await request.json() as { content: string; frontmatter?: Record<string, unknown>; path?: string };
     if (typeof body.content !== 'string') {
       return NextResponse.json(
         { success: false, error: 'Missing required field: content' },
         { status: 400 }
       );
+    }
+
+    // CLAUDE.md resources carry their own filesystem path — write directly
+    if (body.path && body.path.endsWith('/CLAUDE.md')) {
+      const fs = await import('node:fs/promises');
+      await fs.writeFile(body.path, body.content, 'utf-8');
+      const resource: Resource = {
+        id,
+        type,
+        name: 'CLAUDE.md',
+        path: body.path,
+        content: body.content,
+      };
+      return NextResponse.json({ success: true, data: resource });
     }
 
     const resource = await writeResourceFile(type, id, body.content, body.frontmatter);

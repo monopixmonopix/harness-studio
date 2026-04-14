@@ -383,6 +383,7 @@ export function Studio() {
               memories={pm.activeProject?.memories ?? []}
               onDeleteMemory={handleDeleteMemory}
               editorFontSize={studioSettings.settings.editorFontSize}
+              projectId={pm.activeProjectId ?? undefined}
             />
           )}
         </aside>

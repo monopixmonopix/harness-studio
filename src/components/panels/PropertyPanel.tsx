@@ -22,6 +22,7 @@ interface PropertyPanelProps {
   readonly memories?: readonly Resource[];
   readonly onDeleteMemory?: (memory: Resource) => void;
   readonly editorFontSize?: number;
+  readonly projectId?: string;
 }
 
 export function PropertyPanel({
@@ -37,6 +38,7 @@ export function PropertyPanel({
   memories = [],
   onDeleteMemory,
   editorFontSize,
+  projectId,
 }: PropertyPanelProps) {
   // Try to find the selected node from canvas nodes first, then fallback to frontmatter
   const selectedNode = useMemo(() => {
@@ -144,7 +146,7 @@ export function PropertyPanel({
       {/* Editor (only show when no node is selected and resource exists) */}
       {!selectedNode && resource && (
         <div className="flex-1 overflow-hidden">
-          <ResourceEditor resource={resource} onSave={onUpdate} fontSize={editorFontSize} />
+          <ResourceEditor resource={resource} onSave={onUpdate} fontSize={editorFontSize} projectId={projectId} />
         </div>
       )}
 

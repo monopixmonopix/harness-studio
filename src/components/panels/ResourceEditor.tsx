@@ -3,8 +3,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import yaml from 'js-yaml';
-import type { Resource } from '@/types/resources';
+import type { Resource, Workflow } from '@/types/resources';
 import { validateWorkflow } from '@/lib/workflow-validation';
+import { workflowToClaudeMdLine } from '@/lib/workflow-to-claudemd';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react').then((m) => m.default), {
   ssr: false,
@@ -19,6 +20,7 @@ interface ResourceEditorProps {
   readonly resource: Resource;
   readonly onSave: () => void;
   readonly fontSize?: number;
+  readonly projectId?: string;
 }
 
 function useMonacoTheme(): string {
@@ -41,7 +43,7 @@ function useMonacoTheme(): string {
   return theme;
 }
 
-export function ResourceEditor({ resource, onSave, fontSize = 12 }: ResourceEditorProps) {
+export function ResourceEditor({ resource, onSave, fontSize = 12, projectId }: ResourceEditorProps) {
   const monacoTheme = useMonacoTheme();
   const [value, setValue] = useState(resource.content);
   const [saving, setSaving] = useState(false);
@@ -88,12 +90,15 @@ export function ResourceEditor({ resource, onSave, fontSize = 12 }: ResourceEdit
     setSaving(true);
     try {
       const isPathBased = resource.type === 'memories';
+      const isClaudeMd = resource.path.endsWith('/CLAUDE.md');
       const url = isPathBased
         ? '/api/files'
         : `/api/resources/${resource.type}/${resource.id}`;
       const payload = isPathBased
         ? { path: resource.path, content: value, frontmatter: resource.frontmatter }
-        : { content: value, frontmatter: resource.frontmatter };
+        : isClaudeMd
+          ? { content: value, frontmatter: resource.frontmatter, path: resource.path }
+          : { content: value, frontmatter: resource.frontmatter };
 
       const res = await fetch(url, {
         method: 'PUT',
@@ -105,6 +110,28 @@ export function ResourceEditor({ resource, onSave, fontSize = 12 }: ResourceEdit
         setDirty(false);
         setSaveError(null);
         onSave();
+
+        // Sync workflow reference to CLAUDE.md (best-effort)
+        if (resource.type === 'workflows' && projectId) {
+          try {
+            const parsed = yaml.load(value);
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+              const wf = parsed as Workflow;
+              if (wf.name && wf.description !== undefined) {
+                const workflowLine = workflowToClaudeMdLine(wf);
+                fetch(`/api/projects/${projectId}/claudemd`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ workflowName: wf.name, workflowLine }),
+                }).catch(() => {
+                  // CLAUDE.md sync is best-effort
+                });
+              }
+            }
+          } catch {
+            // YAML parse error during sync — skip silently
+          }
+        }
       } else {
         const errorMsg = (json as { error?: string }).error ?? 'Failed to save';
         setSaveError(errorMsg);
@@ -117,7 +144,7 @@ export function ResourceEditor({ resource, onSave, fontSize = 12 }: ResourceEdit
     } finally {
       setSaving(false);
     }
-  }, [dirty, saving, value, resource, onSave]);
+  }, [dirty, saving, value, resource, onSave, projectId]);
 
   const language = resource.type === 'workflows' ? 'yaml' : 'markdown';
 
