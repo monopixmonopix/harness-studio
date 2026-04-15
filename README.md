@@ -6,23 +6,34 @@ Visual orchestration platform for Claude Code Agent Teams.
 
 Design, manage, and execute multi-agent workflows through an intuitive DAG editor. Create agents, skills, and workflows — then run them with built-in execution engine.
 
-### Dark Mode
-![claude-studio dark](docs/guide-dark.png)
+## Screenshots
 
-### Light Mode
-![claude-studio light](docs/guide-light.png)
-
-### Workflow DAG
-![workflow DAG](docs/workflow-dag.png)
-
-### Project Workspace
-![project workspace](docs/project-workspace.png)
-
-### Node Editor
-![node editor](docs/agent-node.png)
-
-### Project Config
-![project config](docs/project-settings.png)
+<table>
+  <tr>
+    <td align="center"><strong>Dark Mode</strong></td>
+    <td align="center"><strong>Light Mode</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/guide-dark.png" alt="Dark Mode" width="100%"></td>
+    <td><img src="docs/guide-light.png" alt="Light Mode" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Workflow DAG</strong></td>
+    <td align="center"><strong>Project Workspace</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/workflow-dag.png" alt="Workflow DAG" width="100%"></td>
+    <td><img src="docs/project-workspace.png" alt="Project Workspace" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Node Editor</strong></td>
+    <td align="center"><strong>Project Config</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/agent-node.png" alt="Node Editor" width="100%"></td>
+    <td><img src="docs/project-settings.png" alt="Project Config" width="100%"></td>
+  </tr>
+</table>
 
 ## Features
 

@@ -6,23 +6,34 @@ Claude Code Agent Teams 的可视化编排平台。
 
 通过直观的 DAG 编辑器设计、管理和执行多 Agent 工作流。创建 Agent、Skill 和 Workflow，然后用内置执行引擎运行。
 
-### 深色模式
-![claude-studio 深色模式](docs/guide-dark.png)
+## 截图
 
-### 浅色模式
-![claude-studio 浅色模式](docs/guide-light.png)
-
-### 工作流 DAG
-![工作流 DAG](docs/workflow-dag.png)
-
-### 项目工作区
-![项目工作区](docs/project-workspace.png)
-
-### 节点编辑器
-![节点编辑器](docs/agent-node.png)
-
-### 项目配置
-![项目配置](docs/project-settings.png)
+<table>
+  <tr>
+    <td align="center"><strong>深色模式</strong></td>
+    <td align="center"><strong>浅色模式</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/guide-dark.png" alt="深色模式" width="100%"></td>
+    <td><img src="docs/guide-light.png" alt="浅色模式" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>工作流 DAG</strong></td>
+    <td align="center"><strong>项目工作区</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/workflow-dag.png" alt="工作流 DAG" width="100%"></td>
+    <td><img src="docs/project-workspace.png" alt="项目工作区" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>节点编辑器</strong></td>
+    <td align="center"><strong>项目配置</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/agent-node.png" alt="节点编辑器" width="100%"></td>
+    <td><img src="docs/project-settings.png" alt="项目配置" width="100%"></td>
+  </tr>
+</table>
 
 ## 功能特性
 
