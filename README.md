@@ -6,7 +6,23 @@ Visual orchestration platform for Claude Code Agent Teams.
 
 Design, manage, and execute multi-agent workflows through an intuitive DAG editor. Create agents, skills, and workflows — then run them with built-in execution engine.
 
-![claude-studio screenshot](docs/screenshot.png)
+### Dark Mode
+![claude-studio dark](docs/guide-dark.png)
+
+### Light Mode
+![claude-studio light](docs/guide-light.png)
+
+### Workflow DAG
+![workflow DAG](docs/workflow-dag.png)
+
+### Project Workspace
+![project workspace](docs/project-workspace.png)
+
+### Node Editor
+![node editor](docs/agent-node.png)
+
+### Project Config
+![project config](docs/project-settings.png)
 
 ## Features
 

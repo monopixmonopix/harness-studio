@@ -6,7 +6,23 @@ Claude Code Agent Teams 的可视化编排平台。
 
 通过直观的 DAG 编辑器设计、管理和执行多 Agent 工作流。创建 Agent、Skill 和 Workflow，然后用内置执行引擎运行。
 
-![claude-studio 截图](docs/screenshot.png)
+### 深色模式
+![claude-studio 深色模式](docs/guide-dark.png)
+
+### 浅色模式
+![claude-studio 浅色模式](docs/guide-light.png)
+
+### 工作流 DAG
+![工作流 DAG](docs/workflow-dag.png)
+
+### 项目工作区
+![项目工作区](docs/project-workspace.png)
+
+### 节点编辑器
+![节点编辑器](docs/agent-node.png)
+
+### 项目配置
+![项目配置](docs/project-settings.png)
 
 ## 功能特性
 

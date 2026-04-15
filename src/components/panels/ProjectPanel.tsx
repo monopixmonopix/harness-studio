@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { GripVertical, Plus, Trash2, FileInput } from 'lucide-react';
 import type { Project, Resource, Workflow } from '@/types/resources';
 import { validateWorkflow } from '@/lib/workflow-validation';
@@ -535,6 +535,18 @@ function WorkflowsSection({
   const [showTemplates, setShowTemplates] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
+  const templatePanelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showTemplates) return;
+    function handleMouseDown(e: MouseEvent) {
+      if (templatePanelRef.current && !templatePanelRef.current.contains(e.target as Node)) {
+        setShowTemplates(false);
+      }
+    }
+    document.addEventListener('mousedown', handleMouseDown, true);
+    return () => document.removeEventListener('mousedown', handleMouseDown, true);
+  }, [showTemplates]);
 
   const handleNewBlank = useCallback(() => {
     onCreateWorkflow(project);
@@ -654,7 +666,7 @@ function WorkflowsSection({
           ))}
         </ul>
       )}
-      <div className="relative mt-0.5 flex items-center">
+      <div ref={templatePanelRef} className="relative mt-0.5 flex items-center">
         <button
           onClick={() => setShowTemplates((prev) => !prev)}
           className="flex-1 rounded px-3 py-0.5 text-left text-xs text-accent/70 hover:bg-surface-hover hover:text-accent transition-colors"
@@ -676,22 +688,22 @@ function WorkflowsSection({
           className="hidden"
         />
         {showTemplates && (
-          <div className="absolute left-0 top-full z-10 mt-0.5 w-full rounded border border-border bg-surface shadow-lg">
+          <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-md border border-white/[0.08] bg-popover shadow-[0_8px_30px_rgba(0,0,0,0.4)] ring-1 ring-black/5 backdrop-blur-sm">
             <button
               onClick={handleNewBlank}
-              className="w-full px-3 py-1.5 text-left text-xs text-foreground/70 hover:bg-surface-hover"
+              className="w-full rounded-t-md px-3 py-1.5 text-left text-xs text-foreground/80 hover:bg-white/[0.06] hover:text-foreground transition-colors"
             >
               Blank
             </button>
-            <div className="border-t border-border">
+            <div className="border-t border-white/[0.06]">
               <p className="px-3 py-1 text-[9px] uppercase tracking-wider text-muted">Templates</p>
               {WORKFLOW_TEMPLATES.map((tpl) => (
                 <button
                   key={tpl.name}
                   onClick={() => handleNewFromTemplate(tpl.workflow)}
-                  className="w-full px-3 py-1 text-left hover:bg-surface-hover"
+                  className="w-full px-3 py-1 text-left hover:bg-white/[0.06] transition-colors"
                 >
-                  <span className="block text-xs text-foreground/70">{tpl.name}</span>
+                  <span className="block text-xs text-foreground/80">{tpl.name}</span>
                   <span className="block text-[10px] text-muted/60">{tpl.description}</span>
                 </button>
               ))}
