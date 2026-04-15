@@ -95,12 +95,32 @@ npm run dev -- -p 3100
 
 ## How It Works
 
-1. **Open or create a project** — point to any directory with `.claude/`
-2. **Create agents** — from templates or AI generation
-3. **Build workflow** — drag agents onto canvas, connect with edges
+claude-studio is a GUI for the `~/.claude/` directory — the same directory Claude Code reads at runtime. Everything you create in the studio is written directly to `.claude/` as standard files:
+
+| You create in studio | Saved as | Claude Code reads it as |
+|---|---|---|
+| Agent | `.claude/agents/name.md` | Agent definition (spawnable via `Agent` tool) |
+| Skill | `.claude/skills/name.md` | Slash command (`/skill-name`) |
+| Workflow | `.claude/workflows/name.yaml` | Team orchestration blueprint |
+| CLAUDE.md edits | `CLAUDE.md` | Project instructions |
+| Settings | `.claude/settings.json` | MCP servers, hooks, permissions |
+
+### Workflow
+
+1. **Open a project** — point to any directory with `.claude/` (or create one)
+2. **Create agents** — from 9 built-in templates or AI generation
+3. **Build workflow** — drag agents onto canvas, connect with 4 edge types
 4. **Bind skills & MCPs** — drag from panel onto agent nodes
-5. **Run** — execute with checkpoint gates
-6. **Export** — save as YAML or export as Claude Code plugin
+5. **Run** — execute with real-time status and checkpoint approval
+6. **Use in Claude Code** — open the same project in Claude Code, your agents/skills/workflows are ready
+
+### Integration with CLAUDE.md
+
+When you save a workflow, claude-studio **auto-syncs** it into `CLAUDE.md`. This means Claude Code automatically sees your team structure, agent roles, and workflow definitions when it starts. You design the team visually, Claude Code executes it.
+
+```
+claude-studio (design) → ~/.claude/ (files) → Claude Code (runtime)
+```
 
 ---
 

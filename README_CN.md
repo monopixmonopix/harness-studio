@@ -95,12 +95,32 @@ npm run dev -- -p 3100
 
 ## 使用流程
 
-1. **打开或新建项目** — 指向任何包含 `.claude/` 的目录
-2. **创建 Agent** — 从模板或 AI 生成
-3. **编排工作流** — 拖拽 Agent 到画布，连线定义依赖
+claude-studio 是 `~/.claude/` 目录的 GUI —— 与 Claude Code 运行时读取的是同一个目录。你在 studio 中创建的一切都直接写入 `.claude/` 标准文件：
+
+| 在 studio 中创建 | 保存为 | Claude Code 识别为 |
+|---|---|---|
+| Agent | `.claude/agents/name.md` | Agent 定义（可通过 `Agent` 工具调度） |
+| Skill | `.claude/skills/name.md` | 斜杠命令（`/skill-name`） |
+| Workflow | `.claude/workflows/name.yaml` | 团队编排蓝图 |
+| CLAUDE.md 编辑 | `CLAUDE.md` | 项目指令 |
+| 设置 | `.claude/settings.json` | MCP 服务器、Hook、权限 |
+
+### 工作流程
+
+1. **打开项目** — 指向任何包含 `.claude/` 的目录（或新建一个）
+2. **创建 Agent** — 从 9 个内置模板或 AI 生成
+3. **编排工作流** — 拖拽 Agent 到画布，用 4 种边类型连线
 4. **绑定 Skill 和 MCP** — 从面板拖到 Agent 节点
-5. **执行** — Run 执行并审批 Checkpoint
-6. **导出** — 保存为 YAML 或导出为 Plugin 包
+5. **执行** — Run 执行，实时查看状态，审批 Checkpoint
+6. **在 Claude Code 中使用** — 打开同一个项目目录，Agent/Skill/Workflow 即刻可用
+
+### 与 CLAUDE.md 的联动
+
+保存工作流时，claude-studio 会**自动同步**到 `CLAUDE.md`。这意味着 Claude Code 启动时自动看到你的团队结构、Agent 角色和工作流定义。你在 studio 中可视化设计团队，Claude Code 负责执行。
+
+```
+claude-studio (设计) → ~/.claude/ (文件) → Claude Code (运行)
+```
 
 ---
 
