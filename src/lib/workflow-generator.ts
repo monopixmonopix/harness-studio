@@ -204,10 +204,10 @@ export function generateWorkflow(input: GeneratorInput): GeneratedWorkflow {
   const platformMatches = matchPlatformPatterns(description);
 
   const workflowName = inferWorkflowName(description, platformMatches);
-  const existingIds = new Set<string>(['user', 'coordinator']);
+  const existingIds = new Set<string>(['user', 'team-lead']);
 
   // Level 0: User (protected)
-  // Level 1: Coordinator (protected)
+  // Level 1: Team Lead (protected)
   // Level 2+: Generated task nodes
   // Last level: Checkpoint nodes (review/publish gates)
 
@@ -257,7 +257,7 @@ export function generateWorkflow(input: GeneratorInput): GeneratedWorkflow {
   }
 
   // Assign levels:
-  // Level 0 = user, Level 1 = coordinator
+  // Level 0 = user, Level 1 = team-lead
   // Level 2 = parallel tasks (all at same level)
   // Level 3+ = sequential tasks (one per level after parallel)
   let currentLevel = 2;
@@ -287,7 +287,7 @@ export function generateWorkflow(input: GeneratorInput): GeneratedWorkflow {
     const bumpedLast: NodeSpec = { ...lastSpec, level: checkpointLevel + 1 };
     const checkpoint: NodeSpec = {
       id: checkpointId,
-      agent: 'coordinator',
+      agent: 'team-lead',
       task: 'Review and approve',
       checkpoint: true,
       level: checkpointLevel,
@@ -300,7 +300,7 @@ export function generateWorkflow(input: GeneratorInput): GeneratedWorkflow {
   // Build nodes: protected nodes + generated nodes
   const protectedNodes: Node<DagNodeData>[] = [
     buildNode({ id: 'user', agent: 'user', task: 'Initiate task', checkpoint: true, level: 0 }, 0, 1),
-    buildNode({ id: 'coordinator', agent: 'coordinator', task: 'Coordinate and delegate tasks', checkpoint: false, level: 1 }, 0, 1),
+    buildNode({ id: 'team-lead', agent: 'team-lead', task: 'Coordinate and delegate tasks', checkpoint: false, level: 1 }, 0, 1),
   ];
 
   // Group generated nodes by level for positioning
@@ -321,13 +321,13 @@ export function generateWorkflow(input: GeneratorInput): GeneratedWorkflow {
 
   // Build edges
   const allEdges: Edge[] = [
-    buildDispatchEdge('user', 'coordinator'),
+    buildDispatchEdge('user', 'team-lead'),
   ];
 
-  // Coordinator dispatches to all level-2 nodes
+  // Team lead dispatches to all level-2 nodes
   const level2Nodes = nodeSpecs.filter((s) => s.level === 2);
   for (const spec of level2Nodes) {
-    allEdges.push(buildDispatchEdge('coordinator', spec.id));
+    allEdges.push(buildDispatchEdge('team-lead', spec.id));
   }
 
   // Connect sequential levels: each level's nodes connect to next level's nodes
@@ -354,7 +354,7 @@ export function generateWorkflow(input: GeneratorInput): GeneratedWorkflow {
   }
 
   // If only level-2 nodes and no sequential, no further edges needed
-  // (coordinator already dispatches to them)
+  // (team-lead already dispatches to them)
 
   const suggestedDescription = `Auto-generated workflow: ${description.slice(0, 80)}`;
 

@@ -18,6 +18,7 @@ interface NodeMenuState {
   readonly kind: 'node';
   readonly position: MenuPosition;
   readonly nodeId: string;
+  readonly agent?: string;
 }
 
 export type ContextMenuState = CanvasMenuState | NodeMenuState | null;
@@ -204,7 +205,7 @@ export function CanvasContextMenu({
         <>
           <MenuItem label="Edit Task" onClick={() => { onEditTask(state.nodeId); onClose(); }} />
           <MenuItem label="Toggle Checkpoint" onClick={() => { onToggleCheckpoint(state.nodeId); onClose(); }} />
-          {!isProtectedNode(state.nodeId) && (
+          {!isProtectedNode(state.nodeId, state.agent) && (
             <MenuItem label="Delete Node" onClick={() => { onDeleteNode(state.nodeId); onClose(); }} variant="danger" />
           )}
         </>

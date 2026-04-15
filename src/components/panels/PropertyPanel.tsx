@@ -400,7 +400,7 @@ function NodeEditor({ nodeId, data, dependencies, reportsTo, syncsWith, roundtri
         </div>
 
         {/* Delete button (hidden for protected nodes) */}
-        {onDeleteNode && !isProtectedNode(nodeId) && (
+        {onDeleteNode && !isProtectedNode(nodeId, data.agent) && (
           <button
             onClick={() => onDeleteNode(nodeId)}
             className="mt-1 rounded border border-red-500/30 bg-red-500/10 px-2 py-1 text-xs text-red-400 hover:bg-red-500/20 transition-colors"

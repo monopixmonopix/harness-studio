@@ -140,7 +140,7 @@ function DagNodeInner({ data, selected }: DagNodeProps) {
 
       <div className="mb-1 flex items-center gap-1 font-semibold text-foreground">
         {data.label}
-        {isProtectedNode(data.nodeId) && (
+        {isProtectedNode(data.nodeId, data.agent) && (
           <Lock size={12} className="text-muted/60" />
         )}
         {execIcon && <span className="ml-auto">{execIcon}</span>}

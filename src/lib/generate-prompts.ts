@@ -37,7 +37,7 @@ nodes:
     task: describe what the user does
     checkpoint: true
 
-  - id: coordinator
+  - id: team-lead
     agent: (MUST be one of: ${agentList})
     task: describe the coordination task
     depends_on: [user]
@@ -45,10 +45,10 @@ nodes:
   - id: worker-1
     agent: (MUST be one of: ${agentList})
     task: describe the task
-    depends_on: [coordinator]
+    depends_on: [team-lead]
 
 Rules:
-- Always start with a "user" node (checkpoint: true) and a "coordinator" node
+- Always start with a "user" node (checkpoint: true) and a "team-lead" node
 - Use depends_on for execution order
 - Use reports_to for feedback edges
 - Use syncs_with for peer collaboration between same-level nodes

@@ -135,14 +135,14 @@ function WorkflowCanvasInner({
         data: { label: 'user', agent: 'user', task: 'Initiate task', checkpoint: true, nodeId: 'user', skills: [], mcpServers: [] },
       },
       {
-        id: 'coordinator',
+        id: 'team-lead',
         type: 'dagNode' as const,
         position: { x: 0, y: 120 },
-        data: { label: 'coordinator', agent: '', task: 'Coordinate and delegate tasks', checkpoint: false, nodeId: 'coordinator', skills: [], mcpServers: [] },
+        data: { label: 'team-lead', agent: '', task: 'Coordinate and delegate tasks', checkpoint: false, nodeId: 'team-lead', skills: [], mcpServers: [] },
       },
     ] as Node<DagNodeData>[],
     edges: [
-      { id: 'user->coordinator', source: 'user', target: 'coordinator', animated: true },
+      { id: 'user->team-lead', source: 'user', target: 'team-lead', animated: true },
     ] as Edge[],
   }), []);
 
@@ -209,7 +209,8 @@ function WorkflowCanvasInner({
   useEffect(() => {
     if (!nodeDeleteRequest) return;
     const targetId = nodeDeleteRequest.nodeId;
-    if (isProtectedNode(targetId)) return;
+    const targetAgent = nodes.find((n) => n.id === targetId)?.data?.agent;
+    if (isProtectedNode(targetId, targetAgent)) return;
     undoRedo.pushSnapshot(nodes, edges);
     setNodes((nds) => nds.filter((n) => n.id !== targetId));
     setEdges((eds) => eds.filter((e) => e.source !== targetId && e.target !== targetId));
@@ -233,7 +234,10 @@ function WorkflowCanvasInner({
   const handleNodesChange: typeof onNodesChange = useCallback(
     (changes) => {
       const safeChanges = changes.filter((c) => {
-        if (c.type === 'remove' && isProtectedNode(c.id)) return false;
+        if (c.type === 'remove') {
+          const agent = nodesRef.current.find((n) => n.id === c.id)?.data?.agent;
+          if (isProtectedNode(c.id, agent)) return false;
+        }
         return true;
       });
       if (safeChanges.length === 0) return;

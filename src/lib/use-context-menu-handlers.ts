@@ -27,7 +27,7 @@ interface UseContextMenuHandlersParams {
 interface UseContextMenuHandlersResult {
   readonly contextMenu: ContextMenuState;
   readonly handlePaneContextMenu: (event: MouseEvent | React.MouseEvent) => void;
-  readonly handleNodeContextMenu: (event: React.MouseEvent, node: { id: string }) => void;
+  readonly handleNodeContextMenu: (event: React.MouseEvent, node: { id: string; data?: { agent?: string } }) => void;
   readonly handleCloseContextMenu: () => void;
   readonly handleContextAddNode: (agent: AgentOption, position: { readonly x: number; readonly y: number }) => void;
   readonly handleContextAddNote: (position: { readonly x: number; readonly y: number }) => void;
@@ -68,12 +68,13 @@ export function useContextMenuHandlers({
   );
 
   const handleNodeContextMenu = useCallback(
-    (event: React.MouseEvent, node: { id: string }) => {
+    (event: React.MouseEvent, node: { id: string; data?: { agent?: string } }) => {
       event.preventDefault();
       setContextMenu({
         kind: 'node',
         position: { x: event.clientX, y: event.clientY },
         nodeId: node.id,
+        agent: node.data?.agent,
       });
     },
     []
@@ -147,7 +148,8 @@ export function useContextMenuHandlers({
 
   const handleContextDeleteNode = useCallback(
     (nodeId: string) => {
-      if (isProtectedNode(nodeId)) return;
+      const agent = nodes.find((n) => n.id === nodeId)?.data?.agent;
+      if (isProtectedNode(nodeId, agent)) return;
       undoRedo.pushSnapshot(nodes, edges);
       setNodes((nds: Node<DagNodeData>[]) => nds.filter((n) => n.id !== nodeId));
       setEdges((eds: Edge[]) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));

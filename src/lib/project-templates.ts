@@ -11,11 +11,11 @@ export interface ProjectTemplateInfo {
 export const PROJECT_TEMPLATES: readonly ProjectTemplateInfo[] = [
   { id: 'blank', name: 'Blank', description: 'Empty project with CLAUDE.md' },
   { id: 'dev-team', name: 'Dev Team', description: 'Architect, coders, reviewer, tester' },
-  { id: 'ops-team', name: 'Ops Team', description: 'Coordinator and ops operator' },
+  { id: 'ops-team', name: 'Ops Team', description: 'Team lead and ops operator' },
 ];
 
 const DEV_TEAM_IDS = ['architect', 'frontend-coder', 'backend-coder', 'code-reviewer', 'tester'] as const;
-const OPS_TEAM_IDS = ['coordinator', 'ops-operator'] as const;
+const OPS_TEAM_IDS = ['team-lead', 'ops-operator'] as const;
 
 function pickTemplates(ids: readonly string[]): readonly AgentTemplate[] {
   return ids

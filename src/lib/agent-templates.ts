@@ -280,13 +280,13 @@ export const AGENT_TEMPLATES: readonly AgentTemplate[] = [
     ].join('\n'),
   },
   {
-    id: 'coordinator',
-    name: 'Coordinator / PM',
+    id: 'team-lead',
+    name: 'Team Lead',
     category: 'Management',
-    description: 'Team coordination, requirement evaluation, task scheduling',
+    description: '团队调度者与协调者。负责接收用户需求、评估优先级、分配任务给团队成员、跟踪进度、验证质量。不亲自执行具体开发或运营任务。',
     frontmatter: { model: 'opus', tools: ['Read', 'Write', 'Edit', 'Bash', 'Glob', 'Grep', 'Agent'] },
     body: [
-      '你是项目协调者，负责团队调度和质量把关。你不直接执行任务，只做决策和分配。',
+      '你是团队调度者与协调者，负责团队调度和质量把关。你不直接执行任务，只做决策和分配。',
       '',
       '## 职责',
       '1. **需求评估** — 评估需求优先级（P0-P3）',
