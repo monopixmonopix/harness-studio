@@ -12,6 +12,8 @@
     <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey?style=flat-square" alt="Platform">
   </p>
 
+  <p>If you find this useful, please ⭐ <a href="https://github.com/androidZzT/claude-studio/stargazers">star this repo</a> — it helps others discover it!</p>
+
   <p>
     <a href="#-features">Features</a> &bull;
     <a href="#%EF%B8%8F-screenshots">Screenshots</a> &bull;
