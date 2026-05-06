@@ -158,8 +158,6 @@ export function CanvasContextMenu({
     setShowAgentList(false);
   }, [state]);
 
-  if (!state) return null;
-
   const handleAddNodeClick = useCallback(() => {
     setShowAgentList(true);
   }, []);
@@ -173,6 +171,8 @@ export function CanvasContextMenu({
     },
     [state, onAddNode, onClose]
   );
+
+  if (!state) return null;
 
   return (
     <div
